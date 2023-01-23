@@ -3,6 +3,17 @@ from scipy.interpolate import RectBivariateSpline as Spline
 import pandas as pd
 from pyproj import Transformer
 import PySimpleGUI as sg
+import os, sys
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # Test Variables for Geoid Offset
 # ---------------------------------------------------------
@@ -58,29 +69,21 @@ def geoid_height(latitude, longitude):
 
     # determine grid based on lat, lng input
     if 40 < latitude < 58 and -130 < longitude < -111:
-        print("using grid 1")
-        ascFile = 'geoid_grids/g2018u1.asc'
+        ascFile = resource_path('g2018u1.asc')
     elif 40 < latitude < 58 and -113 < longitude < -94:
-        print("using grid 2")
-        ascFile = 'geoid_grids/g2018u2.asc'
+        ascFile = resource_path('g2018u2.asc')
     elif 40 < latitude < 58 and -96 < longitude < -77:
-        print("using grid 3")
-        ascFile = 'geoid_grids/g2018u3.asc'
+        ascFile = resource_path('g2018u3.asc')
     elif 40 < latitude < 58 and -79 < longitude < -60:
-        print("using grid 4")
-        ascFile = 'geoid_grids/g2018u4.asc'
+        ascFile = resource_path('g2018u4.asc')
     elif 24 < latitude < 42 and -130 < longitude < -111:
-        print("using grid 5")
-        ascFile = 'geoid_grids/g2018u5.asc'
+        ascFile = resource_path('g2018u5.asc')
     elif 24 < latitude < 42 and -113 < longitude < -94:
-        print("using grid 6")
-        ascFile = 'geoid_grids/g2018u6.asc'
+        ascFile = resource_path('g2018u6.asc')
     elif 24 < latitude < 42 and -96 < longitude < -77:
-        print("using grid 7")
-        ascFile = 'geoid_grids/g2018u7.asc'
+        ascFile = resource_path('g2018u7.asc')
     elif 24 < latitude < 42 and -79 < longitude < -60:
-        print("using grid 8")
-        ascFile = 'geoid_grids/g2018u8.asc'
+        ascFile = resource_path('g2018u8.asc')
     else:
         print("invalid Lat, Lng")
         return
@@ -123,7 +126,6 @@ def sp_to_latlng(x, y, in_crs):
     # outProj = Proj(out_crs)
     transformer = Transformer.from_crs(in_crs, 4326)
     lat, lng = transformer.transform(x, y)
-    print(lat, lng)
     return lat, lng
 
 # convert from lat long(WGS84, EPSG: 4326) to a stateplane zone
@@ -161,7 +163,9 @@ def ne_ellipsoid_ht_calc(north, east, geoid_ht, in_crs):
 
 sg.theme('DarkAmber')
 
-epsg_codes = pd.read_csv('epsg_codes/epsg-sp-nad83.csv')
+epsg_file =resource_path('epsg-sp-nad83.csv')
+
+epsg_codes = pd.read_csv(epsg_file)
 
 status = [(''), ('Please fill out all fields before converting.'), ('Please select StatePlane Zone and Units.')]
 
@@ -239,7 +243,6 @@ while True:
         window['EAST'].Update(disabled=True)
 
     if event == 'Ok' and values['_EPSG_'] and values['METERS_RADIO'] == True and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True:
-        print("lat lng meters")
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_m'].iloc[0])
@@ -255,7 +258,6 @@ while True:
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
     elif event == 'Ok' and values['_EPSG_'] and values['INT_FT_RADIO'] == True and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True:
-        print("lat lng int_ft")
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_ft'].iloc[0])
@@ -271,11 +273,9 @@ while True:
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
     elif event == 'Ok' and values['_EPSG_'] and values['US_FT_RADIO'] == True and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True:
-        print("lat lng usft")
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
-            print(code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
             window['X'].update(value=east)
@@ -288,7 +288,6 @@ while True:
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
     elif event == 'Ok' and values['_EPSG_'] and values['METERS_RADIO'] == True and values['EAST'] and values['NORTH'] and values['NEZ_RADIO'] == True:
-        print("north east meters")
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_m'].iloc[0])
@@ -304,7 +303,6 @@ while True:
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
     elif event == 'Ok' and values['_EPSG_'] and values['INT_FT_RADIO'] == True and values['EAST'] and values['NORTH'] and values['NEZ_RADIO'] == True:
-        print("north east int_ft")
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_ft'].iloc[0])
@@ -320,7 +318,6 @@ while True:
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
     elif event == 'Ok' and values['_EPSG_'] and values['US_FT_RADIO'] == True and values['EAST'] and values['NORTH'] and values['NEZ_RADIO'] == True:
-        print("north east usft")
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
