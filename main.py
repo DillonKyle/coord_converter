@@ -136,16 +136,28 @@ def latlng_to_sp(lat, lng, out_crs):
 
 # convert ellipsoid elevation to geoid and lat lng to stateplane
 
+# ft to meters = 0.3048
+# meters to ft = 3.28084
 
-def ll_geoid_ht_calc(lat, lng, ell_ht):
-    geoid_offset = geoid_height(lat, lng)
-    geoid_ht = ell_ht - geoid_offset
-    return geoid_ht
+# 46.722092
+# -119.593764
 
-def ll_ellipsoid_ht_calc(lat, lng, geoid_ht):
-    geoid_offset = geoid_height(lat, lng)
-    ell_ht = geoid_ht + geoid_offset
-    return ell_ht
+def ll_geoid_ht_calc(lat, lng, ell_ht, units):
+    geoid_offset_m = geoid_height(lat, lng)
+    geoid_offset_ft = geoid_offset_m * 3.28084
+    geoid_ht = ell_ht - geoid_offset_m
+    if units == 'us-ft' or units == 'ft':
+        geoid_ht = geoid_ht* 3.28084
+    return geoid_ht, geoid_offset_m, geoid_offset_ft
+
+def ll_ellipsoid_ht_calc(lat, lng, geoid_ht, units):
+    geoid_offset_m = geoid_height(lat, lng)
+    geoid_offset_ft = geoid_offset_m * 3.28084
+    ell_ht = geoid_ht + geoid_offset_m
+    if units == 'us-ft' or units == 'ft':
+        geoid_ht = geoid_ht * 0.3048
+        ell_ht = geoid_ht + geoid_offset_m
+    return ell_ht, geoid_offset_m, geoid_offset_ft
 
 def ne_geoid_ht_calc(north, east, ell_ht, in_crs):
     lat, lng = sp_to_latlng(east, north, in_crs)
@@ -164,6 +176,7 @@ sg.theme('DarkAmber')
 epsg_codes = pd.read_csv('epsg_codes/epsg-sp-nad83.csv')
 
 status = [(''), ('Please fill out all fields before converting.'), ('Please select StatePlane Zone and Units.')]
+crs_sub = [('This is the output coordinate system for conversion to Easting Northing'), ('This is the input coordinate system for conversion from Easting Northing')]
 
 epsg = [[sg.Listbox(list(epsg_codes['Label']), size=(
     20, 4), enable_events=False, key='_EPSG_')]]
@@ -198,6 +211,8 @@ layout = [
     [sg.Column(nez, element_justification='l')],
     [sg.Text('Input Elevation', size=(30, 1),
              font='Lucida', justification='left')],
+    [sg.Text(text='Leave blank if only doing XY conversions.', size=(60, 1), text_color='white',
+             key='ELEV_SUB', justification='l')],
     [sg.Radio('Ellipsoid', 'RADIO3',
               key='ELL_RADIO', enable_events=True, default=True),
      sg.Radio('Geoid', 'RADIO3',
@@ -205,12 +220,18 @@ layout = [
     [sg.Column(elev, element_justification='l')],
     [sg.Text('Select Stateplane Zone and Units', size=(
         30, 1), font='Lucida', justification='left')],
+    [sg.Text(text=crs_sub[0], size=(60, 1), text_color='white',
+             key='CRS_SUB', justification='l')],
     [sg.Column(epsg, element_justification='c'), sg.Column(
         radio_btns, element_justification='l')],
     [sg.Text(text=status[0], size=(50, 1), text_color='white',
              key='INDICATOR', justification='c')],
     [sg.Text('Output Values', size=(
         30, 1), font='Lucida', justification='left')],
+    [sg.Push(), sg.T('Geoid Offset Meters', key='OFFSET_M_LABEL'), sg.Input(status[0], size=(50, 1), disabled=True, text_color=sg.theme_text_color(), disabled_readonly_background_color=sg.theme_text_element_background_color(),
+                                                   key='OFFSET_M', justification='l')],
+    [sg.Push(), sg.T('Geoid Offset Feet', key='OFFSET_FT_LABEL'), sg.Input(status[0], size=(50, 1), disabled=True, text_color=sg.theme_text_color(), disabled_readonly_background_color=sg.theme_text_element_background_color(),
+                                                   key='OFFSET_FT', justification='l')],
     [sg.Push(), sg.T('X', key='X_LABEL'), sg.Input(status[0], size=(50, 1), disabled=True, text_color=sg.theme_text_color(), disabled_readonly_background_color=sg.theme_text_element_background_color(),
                                                    key='X', justification='l')],
     [sg.Push(), sg.T('Y', key='Y_LABEL'), sg.Input(status[0], size=(50, 1), disabled=True, text_color=sg.theme_text_color(), disabled_readonly_background_color=sg.theme_text_element_background_color(),
@@ -224,15 +245,16 @@ window = sg.Window('Coordinate Converter', layout, resizable=True)
 
 while True:
     event, values = window.read()
-
     if event in (sg.WIN_CLOSED, 'Exit'):
         break
     if values['NEZ_RADIO'] == True:
+        window['CRS_SUB'].Update(value=crs_sub[1])
         window['LAT'].Update(disabled=True)
         window['LNG'].Update(disabled=True)
         window['NORTH'].Update(disabled=False)
         window['EAST'].Update(disabled=False)
     if values['LATLONG_RADIO'] == True:
+        window['CRS_SUB'].Update(value=crs_sub[0])
         window['LAT'].Update(disabled=False)
         window['LNG'].Update(disabled=False)
         window['NORTH'].Update(disabled=True)
@@ -243,12 +265,13 @@ while True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_m'].iloc[0])
+            print("code: ", code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
             window['X'].update(value=east)
             window['Y'].update(value=north)
-            window['X_LABEL'].update(value='Easting')
-            window['Y_LABEL'].update(value='Northing')
+            window['X_LABEL'].update(value='Easting m')
+            window['Y_LABEL'].update(value='Northing m')
             window['INDICATOR'].update(value=status[0])
         except ValueError:
             error = "No ESPG Code for {0} in meters.".format(
@@ -259,12 +282,13 @@ while True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_ft'].iloc[0])
+            print("code: ", code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
             window['X'].update(value=east)
             window['Y'].update(value=north)
-            window['X_LABEL'].update(value='Easting')
-            window['Y_LABEL'].update(value='Northing')
+            window['X_LABEL'].update(value='Easting int ft')
+            window['Y_LABEL'].update(value='Northing int ft')
             window['INDICATOR'].update(value=status[0])
         except ValueError:
             error = "No ESPG Code for {0} in int feet.".format(
@@ -275,13 +299,13 @@ while True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
-            print(code)
+            print("code: ", code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
             window['X'].update(value=east)
             window['Y'].update(value=north)
-            window['X_LABEL'].update(value='Easting')
-            window['Y_LABEL'].update(value='Northing')
+            window['X_LABEL'].update(value='Easting usft')
+            window['Y_LABEL'].update(value='Northing usft')
             window['INDICATOR'].update(value=status[0])
         except ValueError:
             error = "No ESPG Code for {0} in survey feet.".format(
@@ -292,6 +316,7 @@ while True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_m'].iloc[0])
+            print("code: ", code)
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
             window['X'].update(value=lat)
@@ -308,6 +333,7 @@ while True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_ft'].iloc[0])
+            print("code: ", code)
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
             window['X'].update(value=lat)
@@ -324,6 +350,7 @@ while True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
+            print("code: ", code)
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
             window['X'].update(value=lat)
@@ -344,42 +371,60 @@ while True:
         window['INDICATOR'].update(status[1])
 
     if event == 'Ok' and values['_EPSG_'] and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True and values['ELL_RADIO'] ==True and values['ELEV']:
-        
-        geoid_ht = ll_geoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']))
+        if values['METERS_RADIO'] == True:
+            units = 'm'
+        elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
+            units = 'ft'
+        geoid_ht, geoid_offset_m, geoid_offset_ft = ll_geoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
+        window['OFFSET_M'].update(value=geoid_offset_m)
+        window['OFFSET_FT'].update(value=geoid_offset_ft)
         window['Z'].update(value=geoid_ht)
-        window['Z_LABEL'].update(value='Geoid Elevation')
+        window['Z_LABEL'].update(value='Geoid Elevation ' + units)
         window['INDICATOR'].update(value=status[0])
 
     elif event == 'Ok' and values['_EPSG_'] and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
-        
-        ellipsoid_ht = ll_ellipsoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']))
-        window['Z'].update(value=ellipsoid_ht)
-        window['Z_LABEL'].update(value='Ellipsoid Elevation')
+        if values['METERS_RADIO'] == True:
+            units = 'm'
+        elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
+            units = 'ft'
+        ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
+        window['Z'].update(value=ell_ht)
+        window['Z_LABEL'].update(value='Ellipsoid Elevation m')
         window['INDICATOR'].update(value=status[0])
 
-    elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['ELL_RADIO'] ==True and values['ELEV']:
-        try:
-            code = int(epsg_codes.loc[epsg_codes['Label']
-                       == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
-            lat, lng = sp_to_latlng(
-                float(values['EAST']), float(values['NORTH']), code)
-            ellipsoid_ht = ll_ellipsoid_ht_calc(lat, lng, float(values['ELEV']))
-            window['Z'].update(value=ellipsoid_ht)
-            window['Z_LABEL'].update(value='Ellipsoid Elevation')
-            window['INDICATOR'].update(value=status[0])
-        except ValueError:
-            error = "No ESPG Code for {0} in survey feet.".format(
-                values['_EPSG_'][0])
-            window['INDICATOR'].update(value=error)
     elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
                        == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
-            geoid_ht = ll_geoid_ht_calc(lat, lng, float(values['ELEV']))
+            if values['METERS_RADIO'] == True:
+                units = 'm'
+            elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
+                units = 'ft'
+            ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(lat, lng, float(values['ELEV']), units)
+            window['Z'].update(value=ell_ht)
+            window['Z_LABEL'].update(value='Ellipsoid Elevation m')
+            window['INDICATOR'].update(value=status[0])
+        except ValueError:
+            error = "No ESPG Code for {0} in survey feet.".format(
+                values['_EPSG_'][0])
+            window['INDICATOR'].update(value=error)
+    elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['ELL_RADIO'] ==True and values['ELEV']:
+        try:
+            code = int(epsg_codes.loc[epsg_codes['Label']
+                       == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
+            lat, lng = sp_to_latlng(
+                float(values['EAST']), float(values['NORTH']), code)
+            if values['METERS_RADIO'] == True:
+                units = 'm'
+            elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
+                units = 'ft'
+            geoid_ht, geoid_offset_m, geoid_offset_ft = ll_geoid_ht_calc(lat, lng, float(values['ELEV']), units)
+            window['OFFSET_M'].update(value=geoid_offset_m)
+            window['OFFSET_FT'].update(value=geoid_offset_ft)
             window['Z'].update(value=geoid_ht)
-            window['Z_LABEL'].update(value='Geoid Elevation')
+            window['Z_LABEL'].update(value='Geoid Elevation ' + units)
             window['INDICATOR'].update(value=status[0])
         except ValueError:
             error = "No ESPG Code for {0} in survey feet.".format(
