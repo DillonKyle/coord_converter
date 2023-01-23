@@ -244,7 +244,7 @@ layout = [
                                                    key='Z', justification='l')],
     [sg.Text(text=status[0], size=(50, 1), text_color='white',
              key='WHITESPACE', justification='c')],
-    [sg.Button('Ok'), sg.Button('Cancel')]]
+    [sg.Button('Ok'), sg.Button('Cancel'), sg.Button('Reset')]]
 window = sg.Window('Coordinate Converter', layout, resizable=True)
 
 while True:
@@ -397,6 +397,8 @@ while True:
         elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
             units = 'ft'
         ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
+        window['OFFSET_M'].update(value=geoid_offset_m)
+        window['OFFSET_FT'].update(value=geoid_offset_ft)
         window['Z'].update(value=ell_ht)
         window['Z_LABEL'].update(value='Ellipsoid Elevation m')
 
@@ -411,6 +413,8 @@ while True:
             elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
                 units = 'ft'
             ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(lat, lng, float(values['ELEV']), units)
+            window['OFFSET_M'].update(value=geoid_offset_m)
+            window['OFFSET_FT'].update(value=geoid_offset_ft)
             window['Z'].update(value=ell_ht)
             window['Z_LABEL'].update(value='Ellipsoid Elevation m')
             window['INDICATOR'].update(value=status[0])
@@ -442,7 +446,17 @@ while True:
             window['INDICATOR'].update(value=error)
             window['X'].update(value='')
             window['Y'].update(value='')
-
+    if event == 'Reset':
+        window['LAT'].Update(value='')
+        window['LNG'].Update(value='')
+        window['NORTH'].Update(value='')
+        window['EAST'].Update(value='')
+        window['ELEV'].Update(value='')
+        window['OFFSET_M'].update(value='')
+        window['OFFSET_FT'].update(value='')
+        window['X'].update(value='')
+        window['Y'].update(value='')
+        window['Z'].update(value='')
     if event == 'Cancel':
         raise SystemExit
 window.close()
