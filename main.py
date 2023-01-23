@@ -280,6 +280,8 @@ while True:
             error = "No ESPG Code for {0} in meters.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['INT_FT_RADIO'] == True and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
@@ -296,6 +298,8 @@ while True:
             error = "No ESPG Code for {0} in int feet.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['US_FT_RADIO'] == True and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
@@ -312,6 +316,8 @@ while True:
             error = "No ESPG Code for {0} in survey feet.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['METERS_RADIO'] == True and values['EAST'] and values['NORTH'] and values['NEZ_RADIO'] == True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
@@ -328,6 +334,8 @@ while True:
             error = "No ESPG Code for {0} in meters.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['INT_FT_RADIO'] == True and values['EAST'] and values['NORTH'] and values['NEZ_RADIO'] == True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
@@ -344,6 +352,8 @@ while True:
             error = "No ESPG Code for {0} in int feet.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['US_FT_RADIO'] == True and values['EAST'] and values['NORTH'] and values['NEZ_RADIO'] == True:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
@@ -360,6 +370,8 @@ while True:
             error = "No ESPG Code for {0} in survey feet.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     
     elif event == 'Ok' and values['_EPSG_'] == []:
         window['INDICATOR'].update(value=status[2])
@@ -378,7 +390,6 @@ while True:
         window['OFFSET_FT'].update(value=geoid_offset_ft)
         window['Z'].update(value=geoid_ht)
         window['Z_LABEL'].update(value='Geoid Elevation ' + units)
-        window['INDICATOR'].update(value=status[0])
 
     elif event == 'Ok' and values['_EPSG_'] and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
         if values['METERS_RADIO'] == True:
@@ -388,7 +399,6 @@ while True:
         ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
         window['Z'].update(value=ell_ht)
         window['Z_LABEL'].update(value='Ellipsoid Elevation m')
-        window['INDICATOR'].update(value=status[0])
 
     elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
         try:
@@ -408,6 +418,8 @@ while True:
             error = "No ESPG Code for {0} in survey feet.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['ELL_RADIO'] ==True and values['ELEV']:
         try:
             code = int(epsg_codes.loc[epsg_codes['Label']
@@ -428,6 +440,8 @@ while True:
             error = "No ESPG Code for {0} in survey feet.".format(
                 values['_EPSG_'][0])
             window['INDICATOR'].update(value=error)
+            window['X'].update(value='')
+            window['Y'].update(value='')
 
     if event == 'Cancel':
         raise SystemExit
