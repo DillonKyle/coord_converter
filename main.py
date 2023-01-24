@@ -203,7 +203,6 @@ elev = [
                                             disabled_readonly_background_color='black')]
 ]
 
-
 layout = [
     [sg.Text('Input Coordinates', size=(30, 1),
              font='Lucida', justification='left')],
@@ -271,8 +270,8 @@ while True:
             print("code: ", code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
-            window['X'].update(value=east)
-            window['Y'].update(value=north)
+            window['X'].update(value=round(east, 3))
+            window['Y'].update(value=round(north, 3))
             window['X_LABEL'].update(value='Easting m')
             window['Y_LABEL'].update(value='Northing m')
             window['INDICATOR'].update(value=status[0])
@@ -289,8 +288,8 @@ while True:
             print("code: ", code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
-            window['X'].update(value=east)
-            window['Y'].update(value=north)
+            window['X'].update(value=round(east, 3))
+            window['Y'].update(value=round(north, 3))
             window['X_LABEL'].update(value='Easting int ft')
             window['Y_LABEL'].update(value='Northing int ft')
             window['INDICATOR'].update(value=status[0])
@@ -307,8 +306,8 @@ while True:
             print("code: ", code)
             east, north = latlng_to_sp(
                 float(values['LAT']), float(values['LNG']), code)
-            window['X'].update(value=east)
-            window['Y'].update(value=north)
+            window['X'].update(value=round(east, 3))
+            window['Y'].update(value=round(north, 3))
             window['X_LABEL'].update(value='Easting usft')
             window['Y_LABEL'].update(value='Northing usft')
             window['INDICATOR'].update(value=status[0])
@@ -325,8 +324,8 @@ while True:
             print("code: ", code)
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
-            window['X'].update(value=lat)
-            window['Y'].update(value=lng)
+            window['X'].update(value=round(lat, 7))
+            window['Y'].update(value=round(lng, 7))
             window['X_LABEL'].update(value='Latitude')
             window['Y_LABEL'].update(value='Longitude')
             window['INDICATOR'].update(value=status[0])
@@ -343,8 +342,8 @@ while True:
             print("code: ", code)
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
-            window['X'].update(value=lat)
-            window['Y'].update(value=lng)
+            window['X'].update(value=round(lat, 7))
+            window['Y'].update(value=round(lng, 7))
             window['X_LABEL'].update(value='Latitude')
             window['Y_LABEL'].update(value='Longitude')
             window['INDICATOR'].update(value=status[0])
@@ -361,8 +360,8 @@ while True:
             print("code: ", code)
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
-            window['X'].update(value=lat)
-            window['Y'].update(value=lng)
+            window['X'].update(value=round(lat, 7))
+            window['Y'].update(value=round(lng, 7))
             window['X_LABEL'].update(value='Latitude')
             window['Y_LABEL'].update(value='Longitude')
             window['INDICATOR'].update(value=status[0])
@@ -386,8 +385,8 @@ while True:
         elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
             units = 'ft'
         geoid_ht, geoid_offset_m, geoid_offset_ft = ll_geoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
-        window['OFFSET_M'].update(value=geoid_offset_m)
-        window['OFFSET_FT'].update(value=geoid_offset_ft)
+        window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
+        window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
         window['Z'].update(value=geoid_ht)
         window['Z_LABEL'].update(value='Geoid Elevation ' + units)
 
@@ -397,24 +396,29 @@ while True:
         elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
             units = 'ft'
         ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
-        window['OFFSET_M'].update(value=geoid_offset_m)
-        window['OFFSET_FT'].update(value=geoid_offset_ft)
+        window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
+        window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
         window['Z'].update(value=ell_ht)
         window['Z_LABEL'].update(value='Ellipsoid Elevation m')
 
     elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
         try:
-            code = int(epsg_codes.loc[epsg_codes['Label']
-                       == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
-            lat, lng = sp_to_latlng(
-                float(values['EAST']), float(values['NORTH']), code)
             if values['METERS_RADIO'] == True:
                 units = 'm'
-            elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
+                epsg_units = 'EPSG_m'
+            elif values['INT_FT_RADIO'] == True:
                 units = 'ft'
+                epsg_units = 'EPSG_ft'
+            elif values['US_FT_RADIO'] == True:
+                units = 'ft'
+                epsg_units = 'EPSG_usft'
+            code = int(epsg_codes.loc[epsg_codes['Label']
+                       == values['_EPSG_'][0], epsg_units].iloc[0])
+            lat, lng = sp_to_latlng(
+                float(values['EAST']), float(values['NORTH']), code)
             ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(lat, lng, float(values['ELEV']), units)
-            window['OFFSET_M'].update(value=geoid_offset_m)
-            window['OFFSET_FT'].update(value=geoid_offset_ft)
+            window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
+            window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
             window['Z'].update(value=ell_ht)
             window['Z_LABEL'].update(value='Ellipsoid Elevation m')
             window['INDICATOR'].update(value=status[0])
@@ -426,17 +430,22 @@ while True:
             window['Y'].update(value='')
     elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['ELL_RADIO'] ==True and values['ELEV']:
         try:
-            code = int(epsg_codes.loc[epsg_codes['Label']
-                       == values['_EPSG_'][0], 'EPSG_usft'].iloc[0])
-            lat, lng = sp_to_latlng(
-                float(values['EAST']), float(values['NORTH']), code)
             if values['METERS_RADIO'] == True:
                 units = 'm'
-            elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
+                epsg_units = 'EPSG_m'
+            elif values['INT_FT_RADIO'] == True:
                 units = 'ft'
+                epsg_units = 'EPSG_ft'
+            elif values['US_FT_RADIO'] == True:
+                units = 'ft'
+                epsg_units = 'EPSG_usft'
+            code = int(epsg_codes.loc[epsg_codes['Label']
+                       == values['_EPSG_'][0], epsg_units].iloc[0])
+            lat, lng = sp_to_latlng(
+                float(values['EAST']), float(values['NORTH']), code)
             geoid_ht, geoid_offset_m, geoid_offset_ft = ll_geoid_ht_calc(lat, lng, float(values['ELEV']), units)
-            window['OFFSET_M'].update(value=geoid_offset_m)
-            window['OFFSET_FT'].update(value=geoid_offset_ft)
+            window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
+            window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
             window['Z'].update(value=geoid_ht)
             window['Z_LABEL'].update(value='Geoid Elevation ' + units)
             window['INDICATOR'].update(value=status[0])
