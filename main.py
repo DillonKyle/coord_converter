@@ -385,9 +385,9 @@ while True:
         elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
             units = 'ft'
         geoid_ht, geoid_offset_m, geoid_offset_ft = ll_geoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
-        window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
-        window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
-        window['Z'].update(value=geoid_ht)
+        window['OFFSET_M'].update(value=round(float(geoid_offset_m), 3))
+        window['OFFSET_FT'].update(value=round(float(geoid_offset_ft), 3))
+        window['Z'].update(value=round(float(geoid_ht),2))
         window['Z_LABEL'].update(value='Geoid Elevation ' + units)
 
     elif event == 'Ok' and values['_EPSG_'] and values['LAT'] and values['LNG'] and values['LATLONG_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
@@ -396,9 +396,9 @@ while True:
         elif values['INT_FT_RADIO'] == True or values['US_FT_RADIO'] == True:
             units = 'ft'
         ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(float(values['LAT']), float(values['LNG']), float(values['ELEV']), units)
-        window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
-        window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
-        window['Z'].update(value=ell_ht)
+        window['OFFSET_M'].update(value=round(float(geoid_offset_m), 3))
+        window['OFFSET_FT'].update(value=round(float(geoid_offset_ft), 3))
+        window['Z'].update(value=round(float(ell_ht), 3))
         window['Z_LABEL'].update(value='Ellipsoid Elevation m')
 
     elif event == 'Ok' and values['_EPSG_'] and values['NORTH'] and values['EAST'] and values['NEZ_RADIO'] == True and values['GEO_RADIO'] ==True and values['ELEV']:
@@ -417,9 +417,9 @@ while True:
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
             ell_ht, geoid_offset_m, geoid_offset_ft = ll_ellipsoid_ht_calc(lat, lng, float(values['ELEV']), units)
-            window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
-            window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
-            window['Z'].update(value=ell_ht)
+            window['OFFSET_M'].update(value=round(float(geoid_offset_m), 3))
+            window['OFFSET_FT'].update(value=round(float(geoid_offset_ft), 3))
+            window['Z'].update(value=round(float(ell_ht), 3))
             window['Z_LABEL'].update(value='Ellipsoid Elevation m')
             window['INDICATOR'].update(value=status[0])
         except ValueError:
@@ -444,9 +444,9 @@ while True:
             lat, lng = sp_to_latlng(
                 float(values['EAST']), float(values['NORTH']), code)
             geoid_ht, geoid_offset_m, geoid_offset_ft = ll_geoid_ht_calc(lat, lng, float(values['ELEV']), units)
-            window['OFFSET_M'].update(value=round(geoid_offset_m, 3))
-            window['OFFSET_FT'].update(value=round(geoid_offset_ft, 3))
-            window['Z'].update(value=geoid_ht)
+            window['OFFSET_M'].update(value=round(float(geoid_offset_m), 3))
+            window['OFFSET_FT'].update(value=round(float(geoid_offset_ft), 3))
+            window['Z'].update(value=round(float(geoid_ht),2))
             window['Z_LABEL'].update(value='Geoid Elevation ' + units)
             window['INDICATOR'].update(value=status[0])
         except ValueError:
